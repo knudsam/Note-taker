@@ -22,19 +22,14 @@ app.get('/api/notes', (req, res) => {
 });
 
 // GET route to display the homepage
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/index.html'));
+app.get("/", function (req, res) {
+    res.sendFile(path.join(__dirname, "/public/index.html"));
 });
 
-// GET route to display the notes page
-app.get('/notes', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/notes.html'));
-});
-
-// Catch-all route to redirect to the users homepage if the requested resource does not exist
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/index.html'));
-});
+// Notes html and it's "url"
+app.get("/notes", function (req, res) {
+    res.sendFile(path.join(__dirname, "/public/notes.html"));
+})
 
 // Function to create a new note
 app.route("/api/notes")
@@ -100,5 +95,5 @@ app.delete('/api/notes/:id', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`API server now on port ${PORT}!`);
+    console.log(`Server now running on port ${PORT}!`);
 });
