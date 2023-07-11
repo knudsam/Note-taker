@@ -2,7 +2,6 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const database = require("./db/db.json");
 
 // create an instance of express
 const app = express();
@@ -16,58 +15,51 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
-// GET route to display all existing notes
+// GET route to display all notes
 app.get('/api/notes', (req, res) => {
     res.json(allnotes.slice(1));
 });
 
-// GET route to display the homepage
-app.get("/", function (req, res) {
-    res.sendFile(path.join(__dirname, "/public/index.html"));
+// GET route to display homepage
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/index.html'));
 });
 
-// Notes html and it's "url"
-app.get("/notes", function (req, res) {
-    res.sendFile(path.join(__dirname, "/public/notes.html"));
-})
+// GET route to display notes page
+app.get('/notes', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/notes.html'));
+});
+
+// Catch-all route to redirect to homepage if requested resource doesn't exist
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, './public/index.html'));
+});
 
 // Function to create a new note
-app.route("/api/notes")
-    // Grab the notes list (this should be updated for every new note and deleted note.)
-    .get(function (req, res) {
-        res.json(database);
-    })
+function createNewNote(body, notesArray) {
+    const newNote = body;
+    if (!Array.isArray(notesArray))
+        notesArray = [];
 
-    .post(function (req, res) {
-        let jsonFilePath = path.join(__dirname, "/db/db.json");
-        let newNote = req.body;
+    if (notesArray.length === 0)
+        notesArray.push(0);
 
-        let highestId = 99;
+    body.id = notesArray[0];
+    notesArray[0]++;
 
-        for (let i = 0; i < database.length; i++) {
-            let individualNote = database[i];
+    notesArray.push(newNote);
+    fs.writeFileSync(
+        path.join(__dirname, './db/db.json'),
+        JSON.stringify(notesArray, null, 2)
+    );
+    return newNote;
+}
 
-            if (individualNote.id > highestId) {
-
-                highestId = individualNote.id;
-            }
-        }
-
-        newNote.id = highestId + 1;
-
-        database.push(newNote)
-
-
-        fs.writeFile(jsonFilePath, JSON.stringify(database), function (err) {
-
-            if (err) {
-                return console.log(err);
-            }
-            console.log("Your note was saved!");
-        });
-
-        res.json(newNote);
-    });
+// POST route to add a new note
+app.post('/api/notes', (req, res) => {
+    const newNote = createNewNote(req.body, allnotes);
+    res.json(newNote);
+});
 
 // Function to delete a note
 function deleteNote(id, notesArray) {
@@ -87,7 +79,7 @@ function deleteNote(id, notesArray) {
 
 }
 
-// DELETE route to delete a note with a certain id
+// DELETE route to delete a note with given id
 app.delete('/api/notes/:id', (req, res) => {
     deleteNote(req.params.id, allnotes);
     res.json(true);
@@ -95,5 +87,5 @@ app.delete('/api/notes/:id', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`Server now running on port ${PORT}!`);
+    console.log(`API server now on port ${PORT}!`);
 });
